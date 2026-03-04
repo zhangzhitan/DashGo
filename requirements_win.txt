@@ -22,3 +22,5 @@ apscheduler==3.10.4
 paramiko==3.5.1
 sqlalchemy==2.0.31
 waitress==3.0.2
+plotly==5.22.0
+dash-bootstrap-components==2.0.4

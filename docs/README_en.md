@@ -22,17 +22,3 @@ Features:
 1. Easy to use
 2. Easy to embed the application into the framework by onefile
 3. Modern page
-
-## Screenshots
-### workbench
-![](screenshots/workbench.png)
-### monitor
-![](screenshots/moniter.png)
-### person
-![](screenshots/person.png)
-### user
-![](screenshots/user.png)
-### role
-![](screenshots/role.png)
-### group
-![](screenshots/group.png)

@@ -224,14 +224,3 @@ def render_content(menu_access: MenuAccess, **kwargs):
 
 ------
 
-## 五、截图
-
-|![](screenshots/login.png)|![](screenshots/workbench.png)|
-| ---- | ---- |
-|![](screenshots/moniter.png)|![](screenshots/moniter-en.png)|
-|![](screenshots/role.png)|![](screenshots/person.png)|
-|![](screenshots/user.png)|![](screenshots/group.png)|
-|![](screenshots/task_mgmt.png)|![](screenshots/task_log.png)|
-
-
-

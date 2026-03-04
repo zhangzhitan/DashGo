@@ -90,16 +90,6 @@ def render_head_content(menu_access: MenuAccess):
                             'alignItems': 'center',
                         },
                     ),
-                    html.A(
-                        html.Img(src='https://gitee.com/luojiaaoo/DashGo/badge/star.svg?theme=dark'),
-                        href='https://gitee.com/luojiaaoo/DashGo',
-                        target='_blank',
-                        style={
-                            'height': '100%',
-                            'alignItems': 'center',
-                            'marginRight': '40px',
-                        },
-                    ),
                     fac.AntdBadge(
                         fac.AntdAvatar(
                             id='global-head-avatar',

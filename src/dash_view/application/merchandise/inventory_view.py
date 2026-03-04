@@ -1,13 +1,22 @@
 import dash_bootstrap_components as dbc
 from dash import html, dcc, dash_table
-from dash_components.card import render as create_card
+# 之前的错误：card.py 里没有 render，只有 Card 类
+from dash_components.card import Card as create_card
+
+# --- 必须定义的元数据 ---
+title = "商品库存"
+order = 10 
+# 注意：这里定义为列表，如果框架要求唯一性检查，AccessFactory 那边会有逻辑处理
+access_metas = ['商品库存-页面'] 
 
 def render_content():
+    # 保持你原有的逻辑，但注意 create_card 的调用方式需匹配 Card 类的 __init__
     return html.Div([ 
         dbc.Row([
-            dbc.Col(create_card("当前总库存", "0", id="total-stock-card"), width=3),
-            dbc.Col(create_card("累计销售额", "¥0", id="total-sales-card"), width=3),
-            dbc.Col(create_card("待出货商品", "0", id="pending-items-card"), width=3),
+            # 修正调用方式：Card 类接收 title 等关键字参数
+            dbc.Col(create_card(title="当前总库存", id="total-stock-card"), width=3),
+            dbc.Col(create_card(title="累计销售额", id="total-sales-card"), width=3),
+            dbc.Col(create_card(title="待出货商品", id="pending-items-card"), width=3),
         ], className="mb-4"),
         
         dbc.Card([
@@ -29,7 +38,6 @@ def render_content():
             ])
         ]),
         
-        # 隐藏的弹窗：用于输入进货信息
         dbc.Modal([
             dbc.ModalHeader("录入进货信息"),
             dbc.ModalBody([

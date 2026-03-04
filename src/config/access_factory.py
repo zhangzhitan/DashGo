@@ -93,7 +93,14 @@ class AccessFactory:
 
         all_access_metas = []
         for view in cls.views:
-            all_access_metas.append(view.access_metas)
+            # 获取权限属性（处理可调用或直接属性的情况）
+            metas = view.access_metas() if callable(view.access_metas) else view.access_metas
+            # 如果 metas 是列表，转成 tuple 方便 Counter 统计，或者用 extend 检查每一个权限项
+            if isinstance(metas, list):
+                all_access_metas.extend(metas)
+            else:
+                all_access_metas.append(metas)
+
         dict_va_cou = Counter(all_access_metas)
         for va, cou in dict_va_cou.items():
             if cou > 1:

@@ -4,12 +4,13 @@ from .table_user import BaseModel
 
 # 1. 维表：IP、角色、类目
 class DimIP(BaseModel):
-    name = CharField(primary_key=True)
-    class Meta: table_name = 'dim_ip'
+    ip_name = CharField(primary_key=True)
+    ip_remark = CharField(max_length=128)
+    class Meta: table_name = 'merchandise_dim_ip'
 
 class DimCharacter(BaseModel):
     name = CharField(primary_key=True)
-    class Meta: table_name = 'dim_character'
+    class Meta: table_name = 'merchandise_dim_character'
 
 # 2. 商品主表
 class Goods(BaseModel):
@@ -21,7 +22,7 @@ class Goods(BaseModel):
     # 动态数据建议在 DAO 层通过计算逻辑得出，或在此预留统计字段
     stock_self = IntegerField(default=0, help_text='自留数量')
     
-    class Meta: table_name = 'goods_main'
+    class Meta: table_name = 'merchandise_goods_main'
 
 # 3. 进货明细
 class PurchaseRecord(BaseModel):
@@ -32,7 +33,7 @@ class PurchaseRecord(BaseModel):
     buy_count = IntegerField()
     purchase_date = DateTimeField()
     
-    class Meta: table_name = 'purchase_record'
+    class Meta: table_name = 'merchandise_purchase_record'
 
 # 4. 销售订单
 class SalesOrder(BaseModel):
@@ -44,4 +45,4 @@ class SalesOrder(BaseModel):
     shipping_address = CharField(max_length=255, null=True)
     sale_date = DateTimeField()
     
-    class Meta: table_name = 'sales_order'
+    class Meta: table_name = 'merchandise_sales_order'

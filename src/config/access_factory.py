@@ -10,8 +10,9 @@ from dash_view.application.setting_ import notify_api, listen_api
 from dash_view.application.example_app import subapp1, subapp2
 from dash_view.application.data_inventory import inventory
 from dash_view.application.merchandise import inventory_view
+from dash_view.application.merchandise import ip_mgmt_view
 
-apps = [subapp2, subapp1,inventory,inventory_view]
+apps = [subapp2, subapp1,inventory,inventory_view,ip_mgmt_view]
 
 ################## 【结束】此处导入您的应用 ###################
 

@@ -5,11 +5,12 @@ from dash_components.card import Card as create_card
 
 # --- 必须定义的元数据 ---
 title = "商品库存"
-order = 10 
+icon = None
+order = 1 
 # 注意：这里定义为列表，如果框架要求唯一性检查，AccessFactory 那边会有逻辑处理
-access_metas = ['商品库存-页面'] 
+access_metas = ['商品库存'] 
 
-def render_content():
+def render_content(menu_access, **kwargs):
     # 保持你原有的逻辑，但注意 create_card 的调用方式需匹配 Card 类的 __init__
     return html.Div([ 
         dbc.Row([

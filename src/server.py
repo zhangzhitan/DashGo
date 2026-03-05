@@ -11,10 +11,6 @@ import time
 from dash import get_asset_url
 from i18n import t__other
 
-# 修改Peewee 的连接池（PooledDatabase）有最大连接数限制。如果每次回调（callback）或请求都打开一个新连接而不关闭，很快就会达到上限（默认通常是 5 到 10 个）。
-from database.sql_db.conn import database
-
-
 
 logger = Log.get_logger(__name__)
 
@@ -47,17 +43,6 @@ app.title = ShowConf.WEB_TITLE
 
 # flask实例
 server = app.server
-
-# 自动管理链接
-@server.before_request
-def _db_connect():
-    if database.is_closed():
-        database.connect()
-
-@server.teardown_request
-def _db_close(exc):
-    if not database.is_closed():
-        database.close()
 
 # 头像获取接口
 @server.route('/avatar/<user_name>')

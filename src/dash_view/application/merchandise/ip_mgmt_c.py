@@ -4,9 +4,10 @@ import dash
 import pandas as pd
 import io
 import base64
-from database.sql_db.dao import dao_merchandise
+from database.sql_db.dao import dao_goods_ip
 from dash_components import MessageManager
 from i18n import t__default
+from dash import dcc 
 
 def get_table_data():
     """获取表格最新数据并构造操作按钮"""
@@ -20,7 +21,7 @@ def get_table_data():
                 {'content': '删除', 'type': 'primary', 'custom': 'delete:' + item['ip_name'], 'danger': True}
             ]
         }
-        for item in dao_merchandise.get_all_ips()
+        for item in dao_goods_ip.get_all_ips()
     ]
 
 # # --- 1. 初始化与刷新表格 ---
@@ -56,7 +57,7 @@ def handle_table_btn_click(nClicksButton, clickedCustom: str):
         return [True, ip_name, dash.no_update, dash.no_update, dash.no_update, dash.no_update, dash.no_update]
         
     elif action == 'update':
-        ip_info = next((i for i in dao_merchandise.get_all_ips() if i['ip_name'] == ip_name), None)
+        ip_info = next((i for i in dao_goods_ip.get_all_ips() if i['ip_name'] == ip_name), None)
         return [dash.no_update, dash.no_update, True, '编辑 IP', ip_info['ip_name'], ip_info['ip_name'], ip_info['ip_remark']]
 
 # --- 3. 打开新增弹窗 ---
@@ -98,16 +99,16 @@ def save_ip(okCounts, old_name, new_name, remark):
         return dash.no_update, dash.no_update
 
     if old_name: # 更新
-        if old_name != new_name and dao_merchandise.exists_ip_name(new_name):
+        if old_name != new_name and dao_goods_ip.exists_ip_name(new_name):
             MessageManager.warning('修改后的IP名称已存在')
             return dash.no_update, dash.no_update
-        rt = dao_merchandise.update_ip(old_name, new_name, remark)
+        rt = dao_goods_ip.update_ip(old_name, new_name, remark)
         msg = 'IP更新'
     else: # 新增
-        if dao_merchandise.exists_ip_name(new_name):
+        if dao_goods_ip.exists_ip_name(new_name):
             MessageManager.warning('该IP名称已存在')
             return dash.no_update, dash.no_update
-        rt = dao_merchandise.create_ip(new_name, remark)
+        rt = dao_goods_ip.create_ip(new_name, remark)
         msg = 'IP新增'
 
     if rt:
@@ -129,7 +130,7 @@ def save_ip(okCounts, old_name, new_name, remark):
     prevent_initial_call=True
 )
 def execute_delete(okCounts, ip_name):
-    if dao_merchandise.delete_ip(ip_name):
+    if dao_goods_ip.delete_ip(ip_name):
         MessageManager.success('删除成功')
         return get_table_data(), False
     else:
@@ -145,7 +146,7 @@ def execute_delete(okCounts, ip_name):
 def export_excel(nClicks):
     if not nClicks:
         return dash.no_update
-    data = dao_merchandise.get_all_ips()
+    data = dao_goods_ip.get_all_ips()
     df = pd.DataFrame(data)
     df = df.rename(columns={'ip_name': 'IP名称', 'ip_remark': '备注'})
     return dcc.send_data_frame(df.to_excel, "IP数据导出.xlsx", index=False)
@@ -168,7 +169,7 @@ def import_excel(contents):
         df = df.rename(columns={'IP名称': 'ip_name', '备注': 'ip_remark'})
         records = df.to_dict('records')
         
-        success, msg = dao_merchandise.batch_import_ips(records)
+        success, msg = dao_goods_ip.batch_import_ips(records)
         if success:
             MessageManager.success(msg)
             return get_table_data()

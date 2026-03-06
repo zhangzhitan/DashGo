@@ -1,28 +1,7 @@
 from peewee import CharField, IntegerField, DateTimeField, ForeignKeyField, DecimalField, AutoField
 from ..conn import db
 from .table_user import BaseModel
-
-# 1. 维表：IP、角色、类目
-class DimIP(BaseModel):
-    ip_name = CharField(primary_key=True)
-    ip_remark = CharField(max_length=128)
-    class Meta: table_name = 'merchandise_dim_ip'
-
-class DimCharacter(BaseModel):
-    name = CharField(primary_key=True)
-    class Meta: table_name = 'merchandise_dim_character'
-
-# 2. 商品主表
-class Goods(BaseModel):
-    goods_id = AutoField()
-    goods_name = CharField(max_length=128)
-    ip = ForeignKeyField(DimIP, backref='items')
-    character = ForeignKeyField(DimCharacter, backref='items')
-    original_price = DecimalField(max_digits=10, decimal_places=2)
-    # 动态数据建议在 DAO 层通过计算逻辑得出，或在此预留统计字段
-    stock_self = IntegerField(default=0, help_text='自留数量')
-    
-    class Meta: table_name = 'merchandise_goods_main'
+from .table_goods import Goods
 
 # 3. 进货明细
 class PurchaseRecord(BaseModel):

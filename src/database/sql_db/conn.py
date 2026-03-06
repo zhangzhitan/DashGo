@@ -48,7 +48,8 @@ def create_rds_table():
     from .entity.table_listen_api import SysListenApi
     from .entity.table_listen_task import ApschedulerJobsActiveListen
     from .entity.table_inventory import TableDataInventory
-    from .entity.table_merchandise import DimIP,DimCharacter,Goods, PurchaseRecord, SalesOrder
+    from .entity.table_goods import DimIP,DimCharacter,DimSeries,Goods
+    from .entity.table_merchandise import PurchaseRecord, SalesOrder
 
     db_instance.create_tables(
         [
@@ -72,6 +73,7 @@ def create_rds_table():
             TableDataInventory,
             DimIP,
             DimCharacter,
+            DimSeries,
             Goods,
             PurchaseRecord,
             SalesOrder,

@@ -12,10 +12,14 @@ from common.utilities.util_menu_access import get_menu_access
 from common.utilities.util_menu_access import MenuAccess
 from i18n import t__access
 
-# 自己增加的回调函数
+######################### 自己增加的回调函数 ############################
 # src\dash_view\application\merchandise\ip_mgmt_c.py
 from dash_view.application.merchandise import ip_mgmt_c
-
+from dash_view.application.merchandise import character_mgmt_c
+from dash_view.application.merchandise import series_mgmt_c
+from dash_view.application.merchandise import goods_mgmt_c
+from dash_view.application.merchandise import price_history_c
+########################################################################
 # 折叠侧边栏按钮回调
 app.clientside_callback(
     """(nClicks, collapsed) => {

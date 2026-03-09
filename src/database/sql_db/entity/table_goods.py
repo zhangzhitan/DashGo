@@ -1,4 +1,5 @@
-from peewee import CharField, IntegerField, ForeignKeyField, DecimalField, AutoField
+import datetime
+from peewee import CharField, IntegerField, ForeignKeyField, DecimalField, AutoField, DateTimeField
 from ..conn import db
 from .table_user import BaseModel
 
@@ -46,3 +47,16 @@ class Goods(BaseModel):
     
     class Meta: 
         table_name = 'merchandise_goods_main'
+
+# 3. 商品价格变更历史表 (新增)
+class GoodsPriceHistory(BaseModel):
+    history_id = AutoField()
+    # 注意：这里不使用 ForeignKeyField，防止商品删除时引发级联删除或外键约束报错
+    goods_id = IntegerField(help_text='商品ID')
+    goods_name = CharField(max_length=128, help_text='商品名称')
+    price = DecimalField(max_digits=10, decimal_places=2, help_text='记录时的价格')
+    change_type = CharField(max_length=32, help_text='变更类型：新增/修改/删除/导入')
+    change_time = DateTimeField(default=datetime.datetime.now, help_text='变更时间')
+    
+    class Meta: 
+        table_name = 'merchandise_goods_price_history'

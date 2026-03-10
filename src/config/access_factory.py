@@ -8,16 +8,19 @@ from dash_view.application.setting_ import notify_api, listen_api
 
 ################## 【开始】此处导入您的应用 ###################
 from dash_view.application.example_app import subapp1, subapp2
+
 from dash_view.application.data_inventory import inventory
-from dash_view.application.merchandise import inventory_view
+
 from dash_view.application.merchandise import ip_mgmt_view
 from dash_view.application.merchandise import character_mgmt_view
 from dash_view.application.merchandise import series_mgmt_view
 from dash_view.application.merchandise import goods_mgmt_view
 from dash_view.application.merchandise import price_history_view
+from dash_view.application.merchandise import price_trend_view
 
-apps = [subapp2, subapp1,inventory,inventory_view,ip_mgmt_view,character_mgmt_view,series_mgmt_view,goods_mgmt_view,price_history_view]
-
+apps = [subapp2, subapp1]
+apps += [inventory]
+apps += [ip_mgmt_view,character_mgmt_view,series_mgmt_view,goods_mgmt_view,price_history_view,price_trend_view]
 ################## 【结束】此处导入您的应用 ###################
 
 

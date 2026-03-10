@@ -1,6 +1,7 @@
 from server import app
 from dash.dependencies import Input, Output
 import dash
+import feffery_antd_components as fac
 import pandas as pd
 from database.sql_db.dao import dao_price_history
 from dash import dcc 

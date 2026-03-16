@@ -47,9 +47,9 @@ def create_rds_table():
     from .entity.table_notify_api import SysNotifyApi
     from .entity.table_listen_api import SysListenApi
     from .entity.table_listen_task import ApschedulerJobsActiveListen
-    from .entity.table_inventory import TableDataInventory
+  
     from .entity.table_goods import DimIP,DimCharacter,DimSeries,Goods,GoodsPriceHistory
-    from .entity.table_merchandise import PurchaseRecord, SalesOrder
+    from .entity.table_inventory import DimChannel,SalesOrder,SalesOrderDetail,PurchaseOrder,PurchaseOrderDetail
 
     db_instance.create_tables(
         [
@@ -70,14 +70,18 @@ def create_rds_table():
             SysNotifyApi,
             SysListenApi,
             ApschedulerJobsActiveListen,
-            TableDataInventory,
             DimIP,
             DimCharacter,
             DimSeries,
             Goods,
             GoodsPriceHistory,
-            PurchaseRecord,
+
+            DimChannel,
             SalesOrder,
+            SalesOrderDetail,
+            PurchaseOrder,
+            PurchaseOrderDetail,
+
         ],
         safe=True,
     )

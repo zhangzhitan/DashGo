@@ -17,10 +17,13 @@ from dash_view.application.merchandise import series_mgmt_view
 from dash_view.application.merchandise import goods_mgmt_view
 from dash_view.application.merchandise import price_history_view
 from dash_view.application.merchandise import price_trend_view
+from dash_view.application.merchandise import sales_mgmt_view
+from dash_view.application.merchandise import purchase_mgmt_view
+from dash_view.application.merchandise import inventory_status_view
 
 apps = [subapp2, subapp1]
 apps += [inventory]
-apps += [ip_mgmt_view,character_mgmt_view,series_mgmt_view,goods_mgmt_view,price_history_view,price_trend_view]
+apps += [ip_mgmt_view,character_mgmt_view,series_mgmt_view,goods_mgmt_view,price_history_view,price_trend_view,sales_mgmt_view,purchase_mgmt_view,inventory_status_view]
 ################## 【结束】此处导入您的应用 ###################
 
 

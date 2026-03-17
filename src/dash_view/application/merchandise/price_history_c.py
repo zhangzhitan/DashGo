@@ -16,10 +16,18 @@ def get_table_data():
             'goods_id': item['goods_id'],
             'goods_name': item['goods_name'],
             'price': float(item['price']),
-            'change_type': fac.AntdTag(content=item['change_type'], color='blue' if '新增' in item['change_type'] else ('red' if '删除' in item['change_type'] else 'orange')), # 给变更类型加个标签样式，使其更直观
+            'change_type': fac.AntdTag(content=item['change_type'], color='blue' if '新增' in item['change_type'] else ('red' if '删除' in item['change_type'] else 'orange')),
             'change_time': item['change_time'].strftime('%Y-%m-%d %H:%M:%S') if item['change_time'] else ''
         })
     return formatted_data
+
+# --- 新增：页面加载时自动获取最新数据 ---
+@app.callback(
+    Output('history-mgmt-table', 'data'),
+    Input('history-mgmt-table', 'id'), # 巧用组件自身的 id 作为触发器，组件挂载时会自动触发
+)
+def init_table_data(_):
+    return get_table_data()
 
 # --- 1. 导出 Excel ---
 @app.callback(

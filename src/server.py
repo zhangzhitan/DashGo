@@ -14,6 +14,7 @@ from i18n import t__other
 
 logger = Log.get_logger(__name__)
 
+
 # dash实例
 app = CustomDash(
     __name__,
@@ -22,6 +23,10 @@ app = CustomDash(
     update_title=None,
     serve_locally=CommonConf.DASH_SERVE_LOCALLY,
     extra_hot_reload_paths=[],
+    
+    # —————— 核心修复：添加下面这一行，过滤掉 vendor 文件夹里的 JS，防止与图表组件冲突 ——————
+    assets_ignore='.*vendor.*',  
+    
     hooks={
         'request_pre': """
 (payload) => {
@@ -36,6 +41,7 @@ app = CustomDash(
     },
     on_error=global_exception_handler,
 )
+
 app.server.config['COMPRESS_ALGORITHM'] = FlaskConf.COMPRESS_ALGORITHM
 app.server.config['COMPRESS_BR_LEVEL'] = FlaskConf.COMPRESS_BR_LEVEL
 app.server.secret_key = FlaskConf.COOKIE_SESSION_SECRET_KEY

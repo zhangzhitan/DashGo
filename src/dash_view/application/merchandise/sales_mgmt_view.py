@@ -6,7 +6,7 @@ from database.sql_db.dao import dao_sales # 引入DAO初始化IP列表
 
 title = "出货/订单管理"
 icon = None
-order = 5
+order = 6
 access_metas = ['出货订单管理'] 
 
 def render_content(menu_access, **kwargs):

@@ -6,7 +6,7 @@ from database.sql_db.dao import dao_purchase
 
 title = "进货/入库管理"
 icon = None
-order = 6 # 顺序排在出货后面
+order = 7
 access_metas = ['进货入库管理'] 
 
 def render_content(menu_access, **kwargs):

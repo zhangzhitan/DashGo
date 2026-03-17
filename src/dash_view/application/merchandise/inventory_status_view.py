@@ -5,7 +5,7 @@ from database.sql_db.dao import dao_sales # 复用出货单里的下拉选项查
 
 title = "实时库存盘点"
 icon = None
-order = 7 # 放在进货管理后面
+order = 8
 access_metas = ['实时库存盘点'] 
 
 def render_content(menu_access, **kwargs):

@@ -81,7 +81,7 @@ def update_goods(goods_id: int, goods_name: str, ip_name: str, series_name: str,
             ip, series_obj, char_obj = _ensure_dimensions(ip_name, series_name, character_name)
             goods = Goods.get(Goods.goods_id == goods_id)
             
-            # 【新增埋点】判断价格是否发生了变化，如果变化则记录（或者您可以选择只要保存了就记录）
+            # 判断价格是否发生了变化，如果变化则记录
             if float(goods.original_price) != float(original_price or 0.0):
                 GoodsPriceHistory.create(
                     goods_id=goods_id, goods_name=goods_name, 
@@ -94,8 +94,15 @@ def update_goods(goods_id: int, goods_name: str, ip_name: str, series_name: str,
                     price=original_price or 0.0, change_type='名称修改'
                 )
             
+            # --- 修复部分：必须显式更新所有字段 ---
             goods.goods_name = goods_name
-            # ... 其他字段更新保持不变 ...
+            goods.ip = ip
+            goods.series = series_obj
+            goods.character = char_obj
+            goods.original_price = original_price or 0.0
+            goods.stock_self = stock_self or 0
+            # ------------------------------------
+            
             goods.save()
             txn.commit()
             return True

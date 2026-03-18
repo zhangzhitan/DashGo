@@ -1,0 +1,8 @@
+Dash 静态资源加载冲突问题。你的图表（feffery_antd_charts）无法加载，根本原因是 Monaco Editor 的 JavaScript 文件被 Dash 错误地全局加载
+引发了严重的 JS 异常，导致前端渲染线程崩溃，从而阻断了后续图表组件的渲染。
+为什么之前的重命名没有生效？
+这是因为 Dash 的底层扫描逻辑有一个“坑”：它在扫描 assets 目录时，只会忽略以 _ 或 . 开头的文件，而不会忽略文件夹！
+由于 Monaco Editor 使用的是 AMD 模块规范，这些子模块如果被当成普通脚本同步加载，就会抛出 anonymous define call 的致命冲突，再次导致前端崩溃。
+1. 将文件移出 assets 目录
+2. 在 src/server.py 中添加自定义静态路由
+3. 修改 src/app.py 中的 Monaco 加载路径

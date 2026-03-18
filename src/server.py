@@ -24,8 +24,6 @@ app = CustomDash(
     serve_locally=CommonConf.DASH_SERVE_LOCALLY,
     extra_hot_reload_paths=[],
     
-    # —————— 核心修复：添加下面这一行，过滤掉 vendor 文件夹里的 JS，防止与图表组件冲突 ——————
-    assets_ignore='.*vendor.*',  
     
     hooks={
         'request_pre': """
@@ -41,6 +39,14 @@ app = CustomDash(
     },
     on_error=global_exception_handler,
 )
+
+# ========== 添加以下代码 ==========
+@app.server.route('/static_vendor/<path:path>')
+def serve_static_vendor(path):
+    # 定位到 src/vendor 目录
+    vendor_dir = os.path.join(os.path.dirname(__file__), 'vendor')
+    return send_from_directory(vendor_dir, path)
+# ==================================
 
 app.server.config['COMPRESS_ALGORITHM'] = FlaskConf.COMPRESS_ALGORITHM
 app.server.config['COMPRESS_BR_LEVEL'] = FlaskConf.COMPRESS_BR_LEVEL

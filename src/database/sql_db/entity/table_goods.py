@@ -44,6 +44,8 @@ class Goods(BaseModel):
     original_price = DecimalField(max_digits=10, decimal_places=2)
     # 动态数据建议在 DAO 层通过计算逻辑得出，或在此预留统计字段
     stock_self = IntegerField(default=0, help_text='自留数量')
+    # 【新增】销售状态字段
+    sales_status = CharField(max_length=32, default='销售中', help_text='销售状态：销售中/临时下架/下架')
     
     class Meta: 
         table_name = 'merchandise_goods_main'

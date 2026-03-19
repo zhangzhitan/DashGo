@@ -6,14 +6,14 @@ from ..entity.table_goods import DimIP, DimSeries, DimCharacter, Goods, GoodsPri
 logger = Log.get_logger(__name__)
 
 def get_all_goods():
-    """获取所有商品，包含关联的维度名称，返回字典列表"""
-    # 由于系列和角色可以为 null，这里必须使用 LEFT OUTER JOIN
+    """获取所有商品，包含关联的维度名称和销售状态"""
     query = (Goods
              .select(
                  Goods.goods_id,
                  Goods.goods_name,
                  Goods.original_price,
                  Goods.stock_self,
+                 Goods.sales_status,  # 【新增】查询状态以便在表格显示
                  DimIP.ip_name,
                  DimSeries.series_name,
                  DimCharacter.character_name
@@ -44,28 +44,22 @@ def _ensure_dimensions(ip_name: str, series_name: str = None, character_name: st
         
     return ip, series_obj, char_obj
 
-def create_goods(goods_name: str, ip_name: str, series_name: str, character_name: str, original_price: float, stock_self: int) -> bool:
-    """新建商品（自动补充缺失的维度）"""
+def create_goods(goods_name: str, ip_name: str, series_name: str, character_name: str, original_price: float, stock_self: int, sales_status: str = '销售中') -> bool:
+    """新建商品（增加状态参数）"""
     database = db()
     with database.atomic() as txn:
         try:
             ip, series_obj, char_obj = _ensure_dimensions(ip_name, series_name, character_name)
-            # 获取创建后的商品对象，以拿到自增的 goods_id
             goods = Goods.create(
-                goods_name=goods_name,
-                ip=ip,
-                series=series_obj,
-                character=char_obj,
-                original_price=original_price or 0.0,
-                stock_self=stock_self or 0
+                goods_name=goods_name, ip=ip, series=series_obj, character=char_obj,
+                original_price=original_price or 0.0, stock_self=stock_self or 0,
+                sales_status=sales_status # 【新增】
             )
             
-            # 【新增埋点】记录价格
             GoodsPriceHistory.create(
                 goods_id=goods.goods_id, goods_name=goods_name, 
                 price=original_price or 0.0, change_type='新增'
             )
-            
             txn.commit()
             return True
         except Exception as e:
@@ -73,35 +67,34 @@ def create_goods(goods_name: str, ip_name: str, series_name: str, character_name
             txn.rollback()
             return False
 
-def update_goods(goods_id: int, goods_name: str, ip_name: str, series_name: str, character_name: str, original_price: float, stock_self: int) -> bool:
-    """更新商品信息（自动补充缺失的维度）"""
+def update_goods(goods_id: int, goods_name: str, ip_name: str, series_name: str, character_name: str, original_price: float, stock_self: int, sales_status: str) -> bool:
+    """更新商品信息（包含状态变更）"""
     database = db()
     with database.atomic() as txn:
         try:
             ip, series_obj, char_obj = _ensure_dimensions(ip_name, series_name, character_name)
             goods = Goods.get(Goods.goods_id == goods_id)
             
-            # 判断价格是否发生了变化，如果变化则记录
+            # 记录历史
             if float(goods.original_price) != float(original_price or 0.0):
                 GoodsPriceHistory.create(
                     goods_id=goods_id, goods_name=goods_name, 
                     price=original_price or 0.0, change_type='价格修改'
                 )
-            elif goods.goods_name != goods_name:
-                # 即使价格没变，但如果名字变了，也可以选择记录一条以便追踪溯源
+            elif goods.sales_status != sales_status:
+                # 【新增】记录状态变更
                 GoodsPriceHistory.create(
                     goods_id=goods_id, goods_name=goods_name, 
-                    price=original_price or 0.0, change_type='名称修改'
+                    price=original_price or 0.0, change_type=f'状态变更为:{sales_status}'
                 )
             
-            # --- 修复部分：必须显式更新所有字段 ---
             goods.goods_name = goods_name
             goods.ip = ip
             goods.series = series_obj
             goods.character = char_obj
             goods.original_price = original_price or 0.0
             goods.stock_self = stock_self or 0
-            # ------------------------------------
+            goods.sales_status = sales_status # 【新增】
             
             goods.save()
             txn.commit()
@@ -112,18 +105,22 @@ def update_goods(goods_id: int, goods_name: str, ip_name: str, series_name: str,
             return False
 
 def delete_goods(goods_id: int) -> bool:
-    """删除商品"""
+    """【核心修改】软删除：不再物理删除，而是改为下架状态"""
     database = db()
     with database.atomic() as txn:
         try:
-            # 【新增埋点】在删除前先查询出商品信息用于记录
             goods = Goods.get(Goods.goods_id == goods_id)
+            
+            # 埋点记录
             GoodsPriceHistory.create(
                 goods_id=goods_id, goods_name=goods.goods_name, 
-                price=goods.original_price, change_type='删除'
+                price=goods.original_price, change_type='商品下架(软删除)'
             )
             
-            Goods.delete().where(Goods.goods_id == goods_id).execute()
+            # 【修改】执行软删除
+            goods.sales_status = '下架'
+            goods.save()
+            
             txn.commit()
             return True
         except Exception as e:

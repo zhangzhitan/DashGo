@@ -46,6 +46,9 @@ def open_modal(btn_add, btn_edit, clickedCustom):
         if action == 'edit':
             order_id = int(order_id_str)
             order_info, details = dao_purchase.get_order_full_info(order_id)
+            # 【新增】回显渲染删除按钮
+            for item in details:
+                item['operation'] = [{'content': '删除', 'type': 'link', 'danger': True, 'custom': f"delete:{item['goods_id']}"}]
             return (True, '编辑进货单', order_id, 
                     order_info['external_order_no'], order_info['channel_id'], 
                     order_info['order_status'], order_info['remark'], details)
@@ -85,7 +88,7 @@ def update_filters(ip_v, series_v, char_v):
     goods_opts = dao_purchase.get_goods_options_filtered(ip_v, series_v, char_v)
     return dash.no_update, dash.no_update, goods_opts, dash.no_update, dash.no_update, None
 
-# --- 3. 将选中的商品添加到临时明细列表 / 清空明细 ---
+# --- 3. 将选中的商品添加到临时明细列表 / 单行删除 / 清空明细 ---
 @app.callback(
     [
         Output('purchase-temp-items-store', 'data'),
@@ -94,41 +97,62 @@ def update_filters(ip_v, series_v, char_v):
         Output('purchase-item-qty', 'value')
     ],
     [Input('purchase-btn-add-item', 'nClicks'),
-     Input('purchase-btn-clear-item', 'nClicks')],
+     Input('purchase-btn-clear-item', 'nClicks'),
+     Input('purchase-temp-items-table', 'nClicksButton')], # 【新增】监听表格操作
     [
         State('purchase-item-goods', 'value'),
         State('purchase-item-goods', 'options'),
         State('purchase-item-price', 'value'),
         State('purchase-item-qty', 'value'),
-        State('purchase-temp-items-store', 'data')
+        State('purchase-temp-items-store', 'data'),
+        State('purchase-temp-items-table', 'clickedCustom') # 【新增】参数
     ],
     prevent_initial_call=True
 )
-def manage_store(add_clicks, clear_clicks, goods_id, goods_options, price, qty, current_items):
+def manage_store(add_clicks, clear_clicks, tbl_clicks, goods_id, goods_options, price, qty, current_items, clickedCustom):
     ctx = dash.callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
     
     if triggered_id == 'purchase-btn-clear-item':
         return [], None, None, None
 
+    # 【新增】处理删除特定商品逻辑
+    if triggered_id == 'purchase-temp-items-table' and clickedCustom:
+        action, target_goods_id = clickedCustom.split(':', 1)
+        if action == 'delete':
+            current_items = [item for item in current_items if str(item['goods_id']) != target_goods_id]
+            return current_items, dash.no_update, dash.no_update, dash.no_update
+
     if triggered_id == 'purchase-btn-add-item':
-        if not goods_id or not price or not qty:
+        if not goods_id or price is None or qty is None:
             MessageManager.warning("请填写完整的商品、进价和数量信息")
             return dash.no_update, dash.no_update, dash.no_update, dash.no_update
             
-        goods_name = next((g['label'] for g in goods_options if g['value'] == goods_id), '未知商品')
-        subtotal = float(price) * int(qty)
+        # 【新增】判重并更新逻辑
+        existing_item = next((item for item in current_items if str(item['goods_id']) == str(goods_id)), None)
         
-        new_item = {
-            'key': str(goods_id), 
-            'goods_id': goods_id,
-            'goods_name': goods_name,
-            'price': float(price),
-            'qty': int(qty),
-            'subtotal': round(subtotal, 2)
-        }
-        current_items.append(new_item)
+        if existing_item:
+            existing_item['qty'] = int(qty)
+            existing_item['price'] = float(price)
+            existing_item['subtotal'] = round(float(price) * int(qty), 2)
+            MessageManager.success("已更新该商品信息")
+        else:
+            goods_name = next((g['label'] for g in goods_options if g['value'] == goods_id), '未知商品')
+            subtotal = float(price) * int(qty)
+            
+            new_item = {
+                'key': str(goods_id), 
+                'goods_id': goods_id,
+                'goods_name': goods_name,
+                'price': float(price),
+                'qty': int(qty),
+                'subtotal': round(subtotal, 2),
+                'operation': [{'content': '删除', 'type': 'link', 'danger': True, 'custom': f"delete:{goods_id}"}]
+            }
+            current_items.append(new_item)
         return current_items, None, None, None
+
+    return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
 # --- 4. 监听临时明细列表变化，自动计算总价 ---
 @app.callback(

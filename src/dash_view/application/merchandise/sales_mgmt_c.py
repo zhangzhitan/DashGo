@@ -40,15 +40,16 @@ def open_modal(btn_add, btn_edit, clickedCustom):
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
 
     if triggered_id == 'sale-btn-add':
-        # 新增：清空表单和购物车
         return True, '新增出货单', None, '', '', '待发货', '', []
         
     elif triggered_id == 'sale-mgmt-table' and clickedCustom:
-        # 编辑：从数据库获取主表与明细并回显
         action, order_id_str = clickedCustom.split(':', 1)
         if action == 'edit':
             order_id = int(order_id_str)
             order_info, details = dao_sales.get_order_full_info(order_id)
+            # 【新增】：编辑回显时，为每行明细添加"删除"按钮
+            for item in details:
+                item['operation'] = [{'content': '删除', 'type': 'link', 'danger': True, 'custom': f"delete:{item['goods_id']}"}]
             return (True, '编辑出货单', order_id, 
                     order_info['external_order_no'], order_info['channel_id'], 
                     order_info['order_status'], order_info['shipping_address'], details)
@@ -90,7 +91,7 @@ def update_filters(ip_v, series_v, char_v):
     goods_opts = dao_sales.get_goods_options_filtered(ip_v, series_v, char_v)
     return dash.no_update, dash.no_update, goods_opts, dash.no_update, dash.no_update, None
 
-# --- 3. 将选中的商品添加到临时明细列表 / 清空明细 ---
+# --- 3. 将选中的商品添加到临时明细列表 / 更新明细 / 单行删除 / 清空明细 ---
 @app.callback(
     [
         Output('sale-temp-items-store', 'data'),
@@ -99,41 +100,65 @@ def update_filters(ip_v, series_v, char_v):
         Output('sale-item-qty', 'value')
     ],
     [Input('sale-btn-add-item', 'nClicks'),
-     Input('sale-btn-clear-item', 'nClicks')],
+     Input('sale-btn-clear-item', 'nClicks'),
+     Input('sale-temp-items-table', 'nClicksButton')], # 【新增】监听表格内按钮点击
     [
         State('sale-item-goods', 'value'),
-        State('sale-item-goods', 'options'), # 从当前的商品列表中获取名称
+        State('sale-item-goods', 'options'),
         State('sale-item-price', 'value'),
         State('sale-item-qty', 'value'),
-        State('sale-temp-items-store', 'data')
+        State('sale-temp-items-store', 'data'),
+        State('sale-temp-items-table', 'clickedCustom') # 【新增】获取表格内被点击的自定义参数
     ],
     prevent_initial_call=True
 )
-def manage_store(add_clicks, clear_clicks, goods_id, goods_options, price, qty, current_items):
+def manage_store(add_clicks, clear_clicks, tbl_clicks, goods_id, goods_options, price, qty, current_items, clickedCustom):
     ctx = dash.callback_context
     triggered_id = ctx.triggered[0]['prop_id'].split('.')[0]
     
     if triggered_id == 'sale-btn-clear-item':
         return [], None, None, None
 
+    # 【新增】处理表格行内的“单行删除”逻辑
+    if triggered_id == 'sale-temp-items-table' and clickedCustom:
+        action, target_goods_id = clickedCustom.split(':', 1)
+        if action == 'delete':
+            current_items = [item for item in current_items if str(item['goods_id']) != target_goods_id]
+            return current_items, dash.no_update, dash.no_update, dash.no_update
+
     if triggered_id == 'sale-btn-add-item':
-        if not goods_id or not price or not qty:
+        if not goods_id or price is None or qty is None:
             MessageManager.warning("请填写完整的商品、单价和数量信息")
             return dash.no_update, dash.no_update, dash.no_update, dash.no_update
             
-        goods_name = next((g['label'] for g in goods_options if g['value'] == goods_id), '未知商品')
-        subtotal = float(price) * int(qty)
+        # 【新增】判断该商品是否已在明细中
+        existing_item = next((item for item in current_items if str(item['goods_id']) == str(goods_id)), None)
         
-        new_item = {
-            'key': str(goods_id), # 表格需要 key，也可以用 uuid
-            'goods_id': goods_id,
-            'goods_name': goods_name,
-            'price': float(price),
-            'qty': int(qty),
-            'subtotal': round(subtotal, 2)
-        }
-        current_items.append(new_item)
+        if existing_item:
+            # 如果商品存在，则是“改”操作：更新它的数量和价格
+            existing_item['qty'] = int(qty)
+            existing_item['price'] = float(price)
+            existing_item['subtotal'] = round(float(price) * int(qty), 2)
+            MessageManager.success("已更新该商品信息")
+        else:
+            # 正常“增”操作：添加到列表末尾
+            goods_name = next((g['label'] for g in goods_options if g['value'] == goods_id), '未知商品')
+            subtotal = float(price) * int(qty)
+            
+            new_item = {
+                'key': str(goods_id),
+                'goods_id': goods_id,
+                'goods_name': goods_name,
+                'price': float(price),
+                'qty': int(qty),
+                'subtotal': round(subtotal, 2),
+                # 为新行也打上操作标识
+                'operation': [{'content': '删除', 'type': 'link', 'danger': True, 'custom': f"delete:{goods_id}"}]
+            }
+            current_items.append(new_item)
         return current_items, None, None, None
+
+    return dash.no_update, dash.no_update, dash.no_update, dash.no_update
 
 # --- 4. 监听临时明细列表变化，自动渲染表格并计算总价 ---
 @app.callback(

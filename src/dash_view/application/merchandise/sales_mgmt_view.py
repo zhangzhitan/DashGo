@@ -2,7 +2,7 @@ import dash
 from dash import html, dcc
 import feffery_antd_components as fac
 from dash_view.application.merchandise.sales_mgmt_c import get_table_data
-from database.sql_db.dao import dao_sales # 引入DAO初始化IP列表
+from database.sql_db.dao import dao_sales
 
 title = "出货/订单管理"
 icon = None
@@ -13,12 +13,10 @@ def render_content(menu_access, **kwargs):
     return html.Div([
         fac.AntdSpace([
             fac.AntdButton('新增出货单', id='sale-btn-add', type='primary'),
-            # 【新增导出按钮】
             fac.AntdButton('导出明细 (Excel)', id='sale-btn-export'),
             dcc.Download(id='sale-download-excel')
         ], style={'marginBottom': '15px'}),
         
-        # 主订单表格
         fac.AntdTable(
             id='sale-mgmt-table',
             columns=[
@@ -27,7 +25,6 @@ def render_content(menu_access, **kwargs):
                 {'title': '渠道', 'dataIndex': 'channel'},
                 {'title': '总金额', 'dataIndex': 'total_amount'},
                 {'title': '下单时间', 'dataIndex': 'order_date'},
-                # 【新增操作列】
                 {'title': '操作', 'dataIndex': 'operation', 'renderOptions': {'renderType': 'button'}}
             ],
             data=get_table_data(), 
@@ -35,18 +32,16 @@ def render_content(menu_access, **kwargs):
             pagination=True
         ),
 
-        # 新增/编辑订单弹窗
         fac.AntdModal(
             id='sale-add-modal',
             title='出货单',
             visible=False,
-            width=900, # 加宽一点适应筛选框
+            width=900,
             renderFooter=True,
             okText='保存订单',
             children=[
-                dcc.Store(id='sale-form-order-id'), # 【新增】隐藏的ID标识，判断是修改还是新增
+                dcc.Store(id='sale-form-order-id'),
                 
-                # --- 1. 订单主信息 ---
                 fac.AntdDivider("订单基础信息", innerTextOrientation="left"),
                 fac.AntdForm([
                     fac.AntdFormItem(fac.AntdInput(id='sale-form-ext-no'), label='外部单号', required=True),
@@ -68,7 +63,6 @@ def render_content(menu_access, **kwargs):
                     fac.AntdFormItem(fac.AntdInput(id='sale-form-address'), label='收货地址', style={'width': '300px'}),
                 ], layout='inline'),
                 
-                # --- 2. 订单明细录入区 (加入级联筛选) ---
                 fac.AntdDivider("添加出货商品", innerTextOrientation="left"),
                 fac.AntdSpace([
                     fac.AntdSelect(id='sale-filter-ip', options=dao_sales.get_ip_options(), placeholder='筛选IP', style={'width': 120}, allowClear=True),
@@ -77,13 +71,12 @@ def render_content(menu_access, **kwargs):
                     fac.AntdSelect(id='sale-item-goods', options=dao_sales.get_goods_options_filtered(), placeholder='选择商品 (必填)', style={'width': 220}),
                     fac.AntdInputNumber(id='sale-item-price', placeholder='单价', min=0, precision=2),
                     fac.AntdInputNumber(id='sale-item-qty', placeholder='数量', min=1, precision=0),
-                    fac.AntdButton('添加商品', id='sale-btn-add-item'),
+                    fac.AntdButton('添加/修改商品', id='sale-btn-add-item'),
                     fac.AntdButton('清空明细', id='sale-btn-clear-item', danger=True, type='text')
                 ], wrap=True),
                 
                 dcc.Store(id='sale-temp-items-store', data=[]),
                 
-                # --- 3. 临时明细展示与总价 ---
                 html.Div(style={'marginTop': '20px'}),
                 fac.AntdTable(
                     id='sale-temp-items-table',
@@ -91,7 +84,9 @@ def render_content(menu_access, **kwargs):
                         {'title': '商品名称', 'dataIndex': 'goods_name'},
                         {'title': '单价', 'dataIndex': 'price'},
                         {'title': '数量', 'dataIndex': 'qty'},
-                        {'title': '小计', 'dataIndex': 'subtotal'}
+                        {'title': '小计', 'dataIndex': 'subtotal'},
+                        # 【新增】操作列：用于单行删除商品明细
+                        {'title': '操作', 'dataIndex': 'operation', 'renderOptions': {'renderType': 'button'}}
                     ],
                     data=[],
                     emptyContent='暂无添加的商品明细'

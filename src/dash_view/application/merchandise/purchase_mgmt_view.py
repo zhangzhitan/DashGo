@@ -84,7 +84,9 @@ def render_content(menu_access, **kwargs):
                         {'title': '商品名称', 'dataIndex': 'goods_name'},
                         {'title': '进货单价', 'dataIndex': 'price'},
                         {'title': '进货数量', 'dataIndex': 'qty'},
-                        {'title': '小计', 'dataIndex': 'subtotal'}
+                        {'title': '小计', 'dataIndex': 'subtotal'},
+                        # 【新增】操作列
+                        {'title': '操作', 'dataIndex': 'operation', 'renderOptions': {'renderType': 'button'}}
                     ],
                     data=[],
                     emptyContent='暂无添加的进货明细'

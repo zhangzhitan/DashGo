@@ -49,7 +49,7 @@ def create_rds_table():
     from .entity.table_listen_task import ApschedulerJobsActiveListen
   
     from .entity.table_goods import DimIP,DimCharacter,DimSeries,Goods,GoodsPriceHistory
-    from .entity.table_inventory import DimChannel,SalesOrder,SalesOrderDetail,PurchaseOrder,PurchaseOrderDetail
+    from .entity.table_inventory import DimChannel,SalesOrder,SalesOrderDetail,PurchaseOrder,PurchaseOrderDetail,InventoryDailySnapshot
 
     db_instance.create_tables(
         [
@@ -81,6 +81,7 @@ def create_rds_table():
             SalesOrderDetail,
             PurchaseOrder,
             PurchaseOrderDetail,
+            InventoryDailySnapshot,
 
         ],
         safe=True,

@@ -1,4 +1,4 @@
-from peewee import CharField, IntegerField, ForeignKeyField, DecimalField, AutoField, DateTimeField
+from peewee import CharField, IntegerField, ForeignKeyField, DecimalField, AutoField, DateTimeField, DateField
 from .table_user import BaseModel
 from .table_goods import Goods
 
@@ -72,3 +72,20 @@ class PurchaseOrderDetail(BaseModel):
     subtotal = DecimalField(max_digits=12, decimal_places=2, help_text='小计')
     
     class Meta: table_name = 'merchandise_purchase_order_detail'
+
+class InventoryDailySnapshot(BaseModel):
+    """每日库存快照表"""
+    snapshot_date = DateField(verbose_name="快照日期", index=True)
+    goods = ForeignKeyField(Goods, backref='snapshots', verbose_name="商品")
+    
+    # 核心统计字段
+    in_qty = IntegerField(default=0, verbose_name="当日入库总数")
+    out_qty = IntegerField(default=0, verbose_name="当日出库总数")
+    stock_qty = IntegerField(default=0, verbose_name="当日结余库存(可为负数)")
+
+    class Meta:
+        table_name = 'inventory_daily_snapshot'
+        # 联合主键，确保同一天一个商品只有一条记录
+        indexes = (
+            (('snapshot_date', 'goods'), True),
+        )

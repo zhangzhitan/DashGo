@@ -566,48 +566,70 @@ def toggle_fullscreen(nClicks, isFullscreen):
 # 注入vscode代码编辑器
 app.clientside_callback(
     """(language, id, task_type) => {
-
-    // 销毁先前已存在的编辑器实例
-    if ( window.taskEditor ) {
-        window.taskEditor.dispose();
-    };
-    env_note=null;
-    if (task_type==='listen'){
-        env_note="Envs can be used:\\n__title__ (title)\\n__from__ (who send)\\n__desp__ (context)\\n__detetime__ (send time)\\n\\n"
-    }else{
-        env_note=""
-    }
-    value=null;
-    if (language.toLowerCase() === 'bat'){
-        value="@echo off\\n"+env_note+":: Python Example \\nconda activate env1\\npython E:\\\\script\\\\example.py\\n:: Echo Example\\necho \\"<SOPS_VAR>name:val</SOPS_VAR>\\"";
-    }else if(language.toLowerCase() === 'shell'){
-        value="# Python Example \\n"+env_note+"conda activate env1\\npython /app/script/example.py\\n# Echo Example\\necho \\"<SOPS_VAR>name:val</SOPS_VAR>\\"";
-    }else if(language.toLowerCase() === 'python'){
-        value="# Echo Example\\n"+env_note+"print(\\"<SOPS_VAR>name:val</SOPS_VAR>\\")";
-    }
-
-    monaco.languages.register({ id: 'python' });
-    monaco.languages.setMonarchTokensProvider('python', {
-        tokenizer: {
-            root: [
-                [/print|def|class|if|else|elif|for|while|return|try|except|finally|with|import|from|as|pass|break|continue/, 'keyword'],
-                [/#.*$/, 'comment'],
-                [/"[^"]*"|'[^']*'/, 'string'],
-                [/\d+/, 'number'],
-                [/[a-zA-Z_]\w*/, 'identifier'],
-            ]
+    
+    // 包装在一个初始化函数中，方便实现异步轮询等待
+    const initEditor = () => {
+        // 1. 检查 monaco 是否已经加载完毕，如果没有则等待 100 毫秒后重试
+        if (typeof window.monaco === 'undefined' || !window.monaco.editor) {
+            setTimeout(initEditor, 100);
+            return;
         }
-    });
 
-    window.taskEditor = monaco.editor.create(document.getElementById(id), {
-        value: value,
-        language: language.toLowerCase(),
-        wordWrap: "on",
-        wrappingIndent: "same",
-        automaticLayout: true,
-        lineNumbers: "on",
-        theme: "vs-dark"
-    });
+        // 2. 检查 DOM 容器是否已经渲染完毕，如果没有则等待
+        const container = document.getElementById(id);
+        if (!container) {
+            setTimeout(initEditor, 100);
+            return;
+        }
+
+        // 3. 销毁先前已存在的编辑器实例
+        if ( window.taskEditor ) {
+            window.taskEditor.dispose();
+        }
+
+        let env_note = null;
+        if (task_type === 'listen') {
+            env_note = "Envs can be used:\\n__title__ (title)\\n__from__ (who send)\\n__desp__ (context)\\n__detetime__ (send time)\\n\\n";
+        } else {
+            env_note = "";
+        }
+        
+        let value = null;
+        if (language.toLowerCase() === 'bat'){
+            value="@echo off\\n"+env_note+":: Python Example \\nconda activate env1\\npython E:\\\\script\\\\example.py\\n:: Echo Example\\necho \\"<SOPS_VAR>name:val</SOPS_VAR>\\"";
+        }else if(language.toLowerCase() === 'shell'){
+            value="# Python Example \\n"+env_note+"conda activate env1\\npython /app/script/example.py\\n# Echo Example\\necho \\"<SOPS_VAR>name:val</SOPS_VAR>\\"";
+        }else if(language.toLowerCase() === 'python'){
+            value="# Echo Example\\n"+env_note+"print(\\"<SOPS_VAR>name:val</SOPS_VAR>\\")";
+        }
+
+        monaco.languages.register({ id: 'python' });
+        monaco.languages.setMonarchTokensProvider('python', {
+            tokenizer: {
+                root: [
+                    [/print|def|class|if|else|elif|for|while|return|try|except|finally|with|import|from|as|pass|break|continue/, 'keyword'],
+                    [/#.*$/, 'comment'],
+                    [/"[^"]*"|'[^']*'/, 'string'],
+                    [/\\d+/, 'number'],
+                    [/[a-zA-Z_]\\w*/, 'identifier'],
+                ]
+            }
+        });
+
+        window.taskEditor = monaco.editor.create(container, {
+            value: value,
+            language: language.toLowerCase(),
+            wordWrap: "on",
+            wrappingIndent: "same",
+            automaticLayout: true,
+            lineNumbers: "on",
+            theme: "vs-dark"
+        });
+    };
+
+    // 触发初始化执行
+    initEditor();
+
     return window.dash_clientside.no_update;
 }""",
     Output('task-mgmt-table-add-modal-editor-mount-target', 'children', allow_duplicate=True),
@@ -622,7 +644,11 @@ app.clientside_callback(
 app.clientside_callback(
     """
         (okCounts) => {
-            return [Date.now(), window.taskEditor.getValue()]
+            // 增加安全判断：如果当前页面没有加载编辑器，直接忽略，不执行取值操作
+            if (typeof window.taskEditor === 'undefined' || !window.taskEditor) {
+                return window.dash_clientside.no_update;
+            }
+            return [Date.now(), window.taskEditor.getValue()];
         }
     """,
     [
@@ -632,7 +658,6 @@ app.clientside_callback(
     Input('task-mgmt-table-add-modal', 'okCounts'),
     prevent_initial_call=True,
 )
-
 
 @app.callback(
     Output('task-mgmt-table', 'data', allow_duplicate=True),

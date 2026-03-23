@@ -44,7 +44,7 @@ app = CustomDash(
 @app.server.route('/static_vendor/<path:path>')
 def serve_static_vendor(path):
     # 定位到 src/vendor 目录
-    vendor_dir = os.path.join(os.path.dirname(__file__), 'vendor')
+    vendor_dir = os.path.join(os.path.dirname(__file__), '_vendor')
     return send_from_directory(vendor_dir, path)
 # ==================================
 

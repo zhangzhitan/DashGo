@@ -142,16 +142,31 @@ app.clientside_callback(
 app.clientside_callback(
     # 初始化vscode editor配置
     """
-        (id) => {
-        const script = document.createElement('script');
-        script.textContent = `
+    (id) => {
+        // 防止页面刷新时重复挂载
+        if (window.monacoLoaded) return window.dash_clientside.no_update;
+        window.monacoLoaded = true;
+
+        const configScript = document.createElement('script');
+        configScript.textContent = `
             var require = {
-                baseUrl: '/static_vendor',  // <--- 将这里改为 /static_vendor
+                baseUrl: '/static_vendor',
                 paths: {'vs': 'monaco-editor/min/vs'},
                 'vs/nls': { availableLanguages: { '*': 'zh-cn' } }
             }
         `;
-        document.body.appendChild(script);
+        document.head.appendChild(configScript);
+
+        const loaderScript = document.createElement('script');
+        loaderScript.src = '/static_vendor/monaco-editor/min/vs/loader.js';
+        loaderScript.onload = () => {
+            // loader加载完毕后，使用全局 require 拉取 editor 主核心代码
+            window.require(['vs/editor/editor.main'], function() {
+                console.log('Monaco Editor loaded successfully.');
+            });
+        };
+        document.head.appendChild(loaderScript);
+
         return window.dash_clientside.no_update;
     }""",
     Input('root-container', 'id'),

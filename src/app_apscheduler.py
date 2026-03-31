@@ -32,6 +32,7 @@ import platform
 import os
 import tempfile
 from multiprocessing import Manager
+from apscheduler.jobstores.memory import MemoryJobStore
 # https://github.com/agronholm/apscheduler/blob/3.x/examples/rpc/server.py
 
 
@@ -498,6 +499,8 @@ def add_clear_job(scheduler):
         month='*',
         day_of_week='*',
         id=CLEAR_JOB_ID,
+        jobstore='memory',          # <--- 新增：存入内存
+        replace_existing=True       # <--- 新增：如果已存在则替换
     )
     print(f'清理作业添加成功，保留天数为{ApSchedulerConf.DATA_EXPIRE_DAY}')
 
@@ -522,6 +525,8 @@ def add_listen_job(scheduler):
         ],
         seconds=interval,
         id=LISTEN_JOB_ID,
+        jobstore='memory',          # <--- 新增：存入内存
+        replace_existing=True       # <--- 新增：如果已存在则替换
     )
     print(f'主动监听作业添加成功，扫描周期为{interval}秒')
 
@@ -529,10 +534,20 @@ def add_listen_job(scheduler):
 if __name__ == '__main__':
     manager = Manager()
     shared_datetime = manager.dict({'last_datetime': datetime.now().astimezone() - timedelta(minutes=ListenTaskConf.PERIOD_MINTUES)})
+    # if SqlDbConf.RDB_TYPE == 'sqlite':
+    #     jobstores = {'default': SQLAlchemyJobStore(url=f'sqlite:///{SqlDbConf.SQLITE_DB_PATH}?timeout=20')}
+    # elif SqlDbConf.RDB_TYPE == 'mysql':
+    #     jobstores = {'default': SQLAlchemyJobStore(url=f'mysql+pymysql://{SqlDbConf.USER}:{SqlDbConf.PASSWORD}@{SqlDbConf.HOST}:{SqlDbConf.PORT}/{SqlDbConf.DATABASE}')}
     if SqlDbConf.RDB_TYPE == 'sqlite':
-        jobstores = {'default': SQLAlchemyJobStore(url=f'sqlite:///{SqlDbConf.SQLITE_DB_PATH}?timeout=20')}
+        jobstores = {
+            'default': SQLAlchemyJobStore(url=f'sqlite:///{SqlDbConf.SQLITE_DB_PATH}?timeout=20'),
+            'memory': MemoryJobStore()  # <--- 新增这行
+        }
     elif SqlDbConf.RDB_TYPE == 'mysql':
-        jobstores = {'default': SQLAlchemyJobStore(url=f'mysql+pymysql://{SqlDbConf.USER}:{SqlDbConf.PASSWORD}@{SqlDbConf.HOST}:{SqlDbConf.PORT}/{SqlDbConf.DATABASE}')}
+        jobstores = {
+            'default': SQLAlchemyJobStore(url=f'mysql+pymysql://{SqlDbConf.USER}:{SqlDbConf.PASSWORD}@{SqlDbConf.HOST}:{SqlDbConf.PORT}/{SqlDbConf.DATABASE}'),
+            'memory': MemoryJobStore()  # <--- 新增这行
+        }
     truncate_apscheduler_running()
     executors = {
         'default': ThreadPoolExecutor(64),

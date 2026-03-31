@@ -24,3 +24,4 @@ sqlalchemy==2.0.31
 waitress==3.0.2
 plotly==5.22.0
 dash-bootstrap-components
+pandas

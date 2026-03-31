@@ -642,15 +642,13 @@ app.clientside_callback(
 )
 
 app.clientside_callback(
-    """
-        (okCounts) => {
-            // 增加安全判断：如果当前页面没有加载编辑器，直接忽略，不执行取值操作
-            if (typeof window.taskEditor === 'undefined' || !window.taskEditor) {
-                return window.dash_clientside.no_update;
-            }
-            return [Date.now(), window.taskEditor.getValue()];
+    """(okCounts) => {
+        // 如果编辑器没加载出来，强制返回一个测试用的 Python 脚本
+        if (typeof window.taskEditor === 'undefined' || !window.taskEditor) {
+            return [Date.now(), 'print("1")'];
         }
-    """,
+        return [Date.now(), window.taskEditor.getValue()];
+    }""",
     [
         Output('task-mgmt-table-add-modal-ok-store', 'data'),
         Output('task-mgmt-table-add-modal-editor-script-text-store', 'data'),

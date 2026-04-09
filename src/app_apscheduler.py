@@ -532,7 +532,7 @@ def add_listen_job(scheduler):
     print(f'主动监听作业添加成功，扫描周期为{interval}秒')
 
 
-def daily_statistics_job():
+def daily_statistics_job(**kwargs):
     from database.sql_db.dao.dao_daily_statistics import calculate_and_save_daily_statistics
     calculate_and_save_daily_statistics()
 
@@ -545,7 +545,18 @@ def add_daily_statistics_job(scheduler):
     scheduler.add_job(
         'app_apscheduler:daily_statistics_job',
         'cron',
-        kwargs={},
+        kwargs={
+            'type': 'local',
+            'script_text': '# 【系统保留任务】\n# 每日聚合并统计昨日的进出货以及花费收入等报表展示逻辑\n# 提示：此任务调度逻辑由代码直接控制，请勿在前端随意编辑此脚本',
+            'script_type': 'Python',
+            'timeout': 60,
+            'extract_names': None,
+            'notify_channels': None,
+            'update_by': 'system',
+            'update_datetime': f'{datetime.now():%Y-%m-%dT%H:%M:%S}',
+            'create_by': 'system',
+            'create_datetime': f'{datetime.now():%Y-%m-%dT%H:%M:%S}'
+        },
         year='*',
         week='*',
         second=0,

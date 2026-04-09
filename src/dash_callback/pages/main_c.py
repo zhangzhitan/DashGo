@@ -24,6 +24,7 @@ from dash_view.application.merchandise import sales_mgmt_c
 from dash_view.application.merchandise import purchase_mgmt_c
 from dash_view.application.merchandise import inventory_status_c
 from dash_view.application.merchandise import inventory_analysis_view
+from dash_view.application.merchandise import profit_stats_c
 ########################################################################
 # 折叠侧边栏按钮回调
 app.clientside_callback(

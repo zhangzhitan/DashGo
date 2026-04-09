@@ -50,6 +50,7 @@ def create_rds_table():
   
     from .entity.table_goods import DimIP,DimCharacter,DimSeries,Goods,GoodsPriceHistory
     from .entity.table_inventory import DimChannel,SalesOrder,SalesOrderDetail,PurchaseOrder,PurchaseOrderDetail,InventoryDailySnapshot
+    from .entity.table_daily_statistics import DailyStatistics
 
     db_instance.create_tables(
         [
@@ -82,6 +83,7 @@ def create_rds_table():
             PurchaseOrder,
             PurchaseOrderDetail,
             InventoryDailySnapshot,
+            DailyStatistics,
 
         ],
         safe=True,

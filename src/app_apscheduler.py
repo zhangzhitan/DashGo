@@ -393,6 +393,7 @@ def run_script(
 
 CLEAR_JOB_ID = 'sys_delete_expire_data_for_cron'
 LISTEN_JOB_ID = 'sys_listen_interval_job'
+DAILY_STATISTICS_JOB_ID = 'sys_daily_statistics_job'
 
 
 class SchedulerService(rpyc.Service):
@@ -531,6 +532,35 @@ def add_listen_job(scheduler):
     print(f'主动监听作业添加成功，扫描周期为{interval}秒')
 
 
+def daily_statistics_job():
+    from database.sql_db.dao.dao_daily_statistics import calculate_and_save_daily_statistics
+    calculate_and_save_daily_statistics()
+
+def add_daily_statistics_job(scheduler):
+    try:
+        scheduler.remove_job(DAILY_STATISTICS_JOB_ID)
+        print('每日统计作业删除成功')
+    except:
+        pass
+    scheduler.add_job(
+        'app_apscheduler:daily_statistics_job',
+        'cron',
+        kwargs={},
+        year='*',
+        week='*',
+        second=0,
+        minute=5,
+        hour=0,
+        day='*',
+        month='*',
+        day_of_week='*',
+        id=DAILY_STATISTICS_JOB_ID,
+        jobstore='memory',
+        replace_existing=True
+    )
+    print('每日统计作业添加成功，运行时间为每日 00:05:00')
+
+
 if __name__ == '__main__':
     manager = Manager()
     shared_datetime = manager.dict({'last_datetime': datetime.now().astimezone() - timedelta(minutes=ListenTaskConf.PERIOD_MINTUES)})
@@ -559,6 +589,7 @@ if __name__ == '__main__':
     server = ThreadedServer(SchedulerService, hostname=ApSchedulerConf.HOST, port=ApSchedulerConf.PORT, protocol_config=protocol_config)
     add_clear_job(scheduler)
     add_listen_job(scheduler)
+    add_daily_statistics_job(scheduler)
     try:
         server.start()
     except (KeyboardInterrupt, SystemExit):
